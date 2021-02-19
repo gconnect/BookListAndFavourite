@@ -11,21 +11,18 @@ class BookListPage extends StatefulWidget {
 
 class _BookListPageState extends State<BookListPage> {
   List<Book> bookList = [];
-  List<Book> favouriteList = [];
-  SharedPref sharedPref = SharedPref();
+  SharedPref sharedPref = SharedPref.getInstance;
+
   @override
   void initState() {
     super.initState();
-    bookList = getAllBooks;
+    readBooks();
   }
 
-  // readFav2() async {
-  //   List<Book> booklist = await sharedPref.read2("fav2", favouriteList);
-  //   setState(() {
-  //     favouriteList = booklist;
-  //     print(" booklist2 $booklist");
-  //   });
-  // }
+  void readBooks() async {
+    bookList = await sharedPref.getAllSavedBooks();
+    debugPrint("book is $bookList");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,67 +34,62 @@ class _BookListPageState extends State<BookListPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => FavouriteBooks(favouriteList)),
+                MaterialPageRoute(builder: (context) => FavouriteBooks()),
               );
             },
-            child: Padding(
-                padding: EdgeInsets.only(right: 10),
-                child: Icon(Icons.favorite_border)),
+            child: Padding(padding: EdgeInsets.only(right: 10), child: Icon(Icons.favorite_border)),
           )
         ],
       ),
       body: ListView.builder(
-          itemCount: bookList.length,
-          itemBuilder: (context, index) {
-            Book book = bookList[index];
-            bool isSaved = book.favourite;
-            return GestureDetector(
-              onTap: () {
-                print(index);
-              },
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Image.network(
-                      bookList[index].image,
-                    ),
-                    title: Text(book.title),
-                    subtitle: Text(book.author),
-                    trailing: Container(
-                        child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (isSaved) {
-                                  favouriteList.remove(book);
-                                  sharedPref.remove('fav', book);
-                                  book.favourite = false;
-                                } else {
-                                  favouriteList.add(book);
-                                  book.favourite = true;
-                                  sharedPref.save2("fav", book);
-                                  // sharedPref.save("fav2", favouriteList);
-                                  Scaffold.of(context).showSnackBar(SnackBar(
-                                      content: new Text("Saved!"),
-                                      duration:
-                                          const Duration(milliseconds: 500)));
-                                }
-                              });
-                            },
-                            child: isSaved
-                                ? Icon(
-                                    Icons.favorite,
-                                    color: Colors.red,
-                                  )
-                                : Icon(
-                                    Icons.favorite_border,
-                                  ))),
+        itemCount: this.bookList.length,
+        itemBuilder: (context, index) {
+          Book book = this.bookList[index];
+          bool isSaved = book.favourite;
+          return GestureDetector(
+            onTap: () {
+              print(index);
+            },
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Image.network(
+                    book.image,
                   ),
-                  Divider(),
-                ],
-              ),
-            );
-          }),
+                  title: Text(book.title),
+                  subtitle: Text(book.author),
+                  trailing: Container(
+                    child: InkWell(
+                      onTap: () {
+                        debugPrint("isSaved is $isSaved");
+                        setState(() {
+                          if (isSaved) {
+                            book.favourite = false;
+                            sharedPref.saveBook(book, index: index);
+                          } else {
+                            book.favourite = true;
+                            sharedPref.saveBook(book, index: index);
+                            Scaffold.of(context).showSnackBar(SnackBar(content: new Text("Saved!"), duration: const Duration(milliseconds: 500)));
+                          }
+                        });
+                      },
+                      child: isSaved
+                          ? Icon(
+                              Icons.favorite,
+                              color: Colors.red,
+                            )
+                          : Icon(
+                              Icons.favorite_border,
+                            ),
+                    ),
+                  ),
+                ),
+                Divider(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
