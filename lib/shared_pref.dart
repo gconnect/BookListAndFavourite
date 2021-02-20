@@ -5,9 +5,7 @@ import 'book.dart';
 class SharedPref {
   static SharedPref _instance;
 
-  SharedPref._() {
-    saveOnInit();
-  }
+  SharedPref._();
 
   static SharedPref get getInstance => _instance ??= SharedPref._();
 
@@ -29,11 +27,15 @@ class SharedPref {
   Future<List<Book>> getAllSavedBooks({String key = "favourites"}) async {
     if (key == null || key.isEmpty) return Future.value([]);
     final prefs = await SharedPreferences.getInstance();
-    final value = Book.decode(prefs.getString(key));
-    if (value == null) {
-      return Future.value([]);
+    List<Book> books = [];
+    if (prefs.getString(key) == null) {
+      await saveOnInit();
+      books = Book.decode(prefs.getString(key));
+    } else {
+      books = Book.decode(prefs.getString(key));
     }
-    return value;
+
+    return books;
   }
 
   Future<void> saveBook(Book book, {int index, String key = "favourites"}) async {
@@ -49,11 +51,15 @@ class SharedPref {
     prefs.setString(key, Book.encode(value));
   }
 
-  void saveOnInit({String key = "favourites"}) async {
+  Future<void> saveOnInit({String key = "favourites"}) async {
+    final List<Book> books = getAllBooks;
     final prefs = await SharedPreferences.getInstance();
-    List<Book> bookList = Book.decode(prefs.getString(key));
-    if (bookList != null && bookList.isNotEmpty) return;
-    final bookToString = Book.encode(getAllBooks);
-    prefs.setString(key, bookToString);
+    if (prefs.getString(key) == null) {
+      prefs.setString(key, Book.encode(books));
+    } else {
+      List<Book> bookList = Book.decode(prefs.getString(key));
+      if (bookList != null && bookList.isNotEmpty) return;
+      prefs.setString(key, Book.encode(getAllBooks));
+    }
   }
 }

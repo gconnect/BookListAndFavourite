@@ -16,8 +16,11 @@ class _BookListPageState extends State<BookListPage> {
   @override
   void initState() {
     super.initState();
+    save();
     readBooks();
   }
+
+  void save() async => sharedPref.saveOnInit();
 
   void readBooks() async {
     bookList = await sharedPref.getAllSavedBooks();
