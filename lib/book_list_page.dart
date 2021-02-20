@@ -20,8 +20,12 @@ class _BookListPageState extends State<BookListPage> {
   }
 
   void readBooks() async {
-    bookList = await sharedPref.getAllSavedBooks();
-    debugPrint("book is $bookList");
+    await sharedPref.saveOnInit();
+    final bookList = await sharedPref.getAllSavedBooks();
+    setState(() {
+      this.bookList = bookList;
+      debugPrint("book is $bookList");
+    });
   }
 
   @override
